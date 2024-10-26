@@ -39,6 +39,19 @@ def send_chat_payload(client_socket, message):
     chat_bytes = json.dumps(chat_payload).encode("utf-8")
     client_socket.sendall(chat_bytes)
 
+def send_list_payload(client_socket):
+    """
+    Sends a payload requesting a list of usernames of the clients connected to the server
+    :param client_socket:
+    :return:
+    """
+    list_payload = {
+        "type": "list",
+    }
+    list_bytes = json.dumps(list_payload).encode("utf-8")
+    client_socket.sendall(list_bytes)
+
+
 def send_messages(client_socket, nickname):
     """
     Reads messages sent by the client and sends them to the server as chat packet
@@ -53,6 +66,8 @@ def send_messages(client_socket, nickname):
             client_socket.close()
             chatui.end_windows()
             sys.exit(0)
+        elif message == "/list":
+            send_list_payload(client_socket)
         else:
             send_chat_payload(client_socket, message)
 
@@ -75,6 +90,10 @@ def receive_data(client_socket):
                 chatui.print_message(f"*** {payload['nick']} has joined the chat")
             elif payload['type'] == "leave":
                 chatui.print_message(f"*** {payload['nick']} has left the chat")
+            elif payload['type'] == "list":
+                chatui.print_message(f"List of connected users:")
+                for nickname in payload['nicknames']:
+                    chatui.print_message(nickname)
         else:
             client_socket.close()
             break

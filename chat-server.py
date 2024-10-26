@@ -53,6 +53,18 @@ def create_leave_payload(nickname):
     leave_bytes = json.dumps(leave_payload).encode("utf-8")
     return leave_bytes
 
+def create_list_payload(nicknames):
+    """
+    Create payload containing list of nicknames of clients connected to the server
+    :return:
+    """
+    list_payload = {
+        "type": "list",
+        "nicknames": list(nicknames.values())
+    }
+    list_bytes = json.dumps(list_payload).encode("utf-8")
+    return list_bytes
+
 
 def broadcast(sender_socket, list_of_clients, data):
     """
@@ -111,6 +123,8 @@ def run_server(port):
                             chat_nick = nicknames[sock]
                             chat_payload = create_chat_payload(chat_nick, payload['message'])
                             broadcast(server_socket, read_set, chat_payload)
+                        elif payload['type'] == "list":
+                            sock.sendall(create_list_payload(nicknames))
                     except ConnectionError:
                         print(f"Connection lost: {sock.getpeername()}")
                         if sock in read_set:
