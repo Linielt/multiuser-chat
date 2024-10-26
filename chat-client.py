@@ -87,22 +87,28 @@ def receive_data(client_socket):
     chatui.print_message("To see a list of available commands, please enter '/help'")
 
     while True:
-        data = client_socket.recv(1024)
+        try:
+            data = client_socket.recv(1024)
 
-        if data:
-            payload = json.loads(data.decode("utf-8"))
+            if data:
+                payload = json.loads(data.decode("utf-8"))
 
-            if payload['type'] == "chat":
-                chatui.print_message(f"{payload['nick']}: {payload['message']}")
-            elif payload['type'] == "join":
-                chatui.print_message(f"*** {payload['nick']} has joined the chat")
-            elif payload['type'] == "leave":
-                chatui.print_message(f"*** {payload['nick']} has left the chat")
-            elif payload['type'] == "list":
-                chatui.print_message(f"List of connected users:")
-                for nickname in payload['nicknames']:
-                    chatui.print_message(nickname)
-        else:
+                if payload['type'] == "chat":
+                    chatui.print_message(f"{payload['nick']}: {payload['message']}")
+                elif payload['type'] == "join":
+                    chatui.print_message(f"*** {payload['nick']} has joined the chat")
+                elif payload['type'] == "leave":
+                    chatui.print_message(f"*** {payload['nick']} has left the chat")
+                elif payload['type'] == "list":
+                    chatui.print_message(f"List of connected users:")
+                    for nickname in payload['nicknames']:
+                        chatui.print_message(nickname)
+            else:
+                print("You have disconnected")
+                client_socket.close()
+                break
+        except ConnectionAbortedError:
+            print("You have disconnected")
             client_socket.close()
             break
 
