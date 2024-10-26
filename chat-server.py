@@ -10,6 +10,13 @@ def usage():
 
 
 def create_chat_payload(nickname, message):
+    """
+    Creates payload containing data related to message sent by the client
+    to rebroadcast to all other clients
+    :param nickname:
+    :param message:
+    :return:
+    """
     chat_payload = {
         "type": "chat",
         "nick": nickname,
@@ -20,6 +27,11 @@ def create_chat_payload(nickname, message):
 
 
 def create_join_payload(nickname):
+    """
+    Creates payload to send to clients when a new client joins the server
+    :param nickname:
+    :return:
+    """
     join_payload = {
         "type": "join",
         "nick": nickname
@@ -29,6 +41,11 @@ def create_join_payload(nickname):
 
 
 def create_leave_payload(nickname):
+    """
+    Creates payload to send to clients when a client leaves the server
+    :param nickname:
+    :return:
+    """
     leave_payload = {
         "type": "leave",
         "nick": nickname
@@ -38,12 +55,24 @@ def create_leave_payload(nickname):
 
 
 def broadcast(sender_socket, list_of_clients, data):
+    """
+    Sends given data to all clients on list_of_clients
+    :param sender_socket:
+    :param list_of_clients:
+    :param data:
+    :return:
+    """
     for client in list_of_clients:
         if client != sender_socket:
             client.sendall(data)
 
 
 def run_server(port):
+    """
+    Main process that starts the server on the given port number
+    :param port:
+    :return:
+    """
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('', port))
     server_socket.listen(5)

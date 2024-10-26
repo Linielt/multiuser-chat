@@ -11,6 +11,13 @@ def usage():
     print("usage: chat-client.py nickname host port")
 
 def send_hello_payload(client_socket, nickname):
+    """
+    Sends payload to allow server to associate the client socket with a nickname
+    This MUST be sent before any other packet
+    :param client_socket:
+    :param nickname:
+    :return:
+    """
     hello_payload = {
         "type": "hello",
         "nick": nickname,
@@ -19,6 +26,12 @@ def send_hello_payload(client_socket, nickname):
     client_socket.sendall(hello_bytes)
 
 def send_chat_payload(client_socket, message):
+    """
+    Sends a payload representing a chat message to the server
+    :param client_socket:
+    :param message:
+    :return:
+    """
     chat_payload = {
         "type": "chat",
         "message": message,
@@ -27,6 +40,13 @@ def send_chat_payload(client_socket, message):
     client_socket.sendall(chat_bytes)
 
 def send_messages(client_socket, nickname):
+    """
+    Reads messages sent by the client and sends them to the server as chat packet
+    or performs special actions for inputs beginning with '/'
+    :param client_socket:
+    :param nickname:
+    :return:
+    """
     while True:
         message = chatui.read_command(f"{nickname}> ")
         if message == "/q":
@@ -37,6 +57,12 @@ def send_messages(client_socket, nickname):
             send_chat_payload(client_socket, message)
 
 def receive_data(client_socket):
+    """
+    Receives data sent by the server, processes them and displays an appropriate message
+    to the client
+    :param client_socket:
+    :return:
+    """
     while True:
         data = client_socket.recv(1024)
 
