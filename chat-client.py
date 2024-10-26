@@ -111,6 +111,8 @@ def receive_data(client_socket):
             print("You have disconnected")
             client_socket.close()
             break
+        finally:
+            chatui.end_windows()
 
 def main(argv):
     try:
