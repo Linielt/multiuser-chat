@@ -17,14 +17,14 @@ def main(argv):
     listener_sock.bind(('', port))
     listener_sock.listen()
 
-    connected_clients = {listener_sock}
+    client_set = {listener_sock}
 
     while True:
-        connected_clients, _, _ = select.select(connected_clients, {}, {})
-        for client_sock in connected_clients:
+        ready_to_read, _, _ = select.select(client_set, {}, {})
+        for client_sock in ready_to_read:
             if client_sock == listener_sock:
                 new_client_sock, client_address = listener_sock.accept()
-                connected_clients.add(new_client_sock)
+                client_set.add(new_client_sock)
                 print(f"{new_client_sock.getpeername()}: connected")
             elif client_sock != listener_sock:
                 data = client_sock.recv(1024)
@@ -32,6 +32,11 @@ def main(argv):
                 if len(data) == 0:
                     print(f"{client_sock.getpeername()}: disconnected")
                     client_sock.close()
-                    connected_clients.remove(client_sock)
+                    client_set.remove(client_sock)
                 else:
+                    client_sock.sendall(data)
                     print(f"{client_sock.getpeername()}: {data}")
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
