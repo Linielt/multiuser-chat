@@ -1,29 +1,84 @@
 import json
+import socket
+import sys
+import threading
+
+import chatui
+from chatui import init_windows
 
 
 def usage():
     print("usage: chat-client.py nickname host port")
 
 def send_hello_payload(client_socket, nickname):
-    hello_packet = b""
     hello_payload = {
         "type": "hello",
-        "nickname": nickname,
+        "nick": nickname,
     }
     hello_bytes = json.dumps(hello_payload).encode("utf-8")
-    hello_len_bytes = len(hello_bytes).to_bytes(2, byteorder="big")
-    hello_packet += hello_len_bytes + hello_bytes
-
-    client_socket.sendall(hello_packet)
+    client_socket.sendall(hello_bytes)
 
 def send_chat_payload(client_socket, message):
-    chat_packet = b""
     chat_payload = {
         "type": "chat",
         "message": message,
     }
     chat_bytes = json.dumps(chat_payload).encode("utf-8")
-    chat_len_bytes = len(chat_bytes).to_bytes(2, byteorder="big")
-    chat_packet += chat_len_bytes + chat_bytes
-    client_socket.sendall(chat_packet)
+    client_socket.sendall(chat_bytes)
 
+def send_messages(client_socket, nickname):
+    while True:
+        message = chatui.read_command(f"{nickname}> ")
+        if message == "/q":
+            client_socket.close()
+            chatui.end_windows()
+            sys.exit(0)
+        else:
+            send_chat_payload(client_socket, message)
+
+def receive_data(client_socket):
+    while True:
+        data = client_socket.recv(1024)
+
+        if data:
+            payload = json.loads(data.decode("utf-8"))
+
+            if payload['type'] == "chat":
+                chatui.print_message(f"{payload['nick']}: {payload['message']}")
+            elif payload['type'] == "join":
+                chatui.print_message(f"*** {payload['nick']} has joined the chat")
+            elif payload['type'] == "leave":
+                chatui.print_message(f"*** {payload['nick']} has left the chat")
+        else:
+            client_socket.close()
+            break
+
+def main(argv):
+    try:
+        nickname = argv[1]
+        host = argv[2]
+        port = int(argv[3])
+    except:
+        usage()
+        sys.exit(1)
+
+    threads = []
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((host, port))
+    init_windows()
+    send_hello_payload(client_socket, nickname)
+
+    sending_thread = threading.Thread(target=send_messages, args=(client_socket, nickname,))
+    receiving_thread = threading.Thread(target=receive_data, args=(client_socket,))
+
+    sending_thread.start()
+    receiving_thread.start()
+    threads.append(sending_thread)
+    threads.append(receiving_thread)
+
+    for thread in threads:
+        thread.join()
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
