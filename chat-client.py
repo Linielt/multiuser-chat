@@ -68,6 +68,10 @@ def send_messages(client_socket, nickname):
             sys.exit(0)
         elif message == "/list":
             send_list_payload(client_socket)
+        elif message == "/help":
+            chatui.print_message("Here is the list of available commands:")
+            chatui.print_message("/q : Disconnects you from the server")
+            chatui.print_message("/list : Lists the nicknames of the currently connected users")
         else:
             send_chat_payload(client_socket, message)
 
@@ -78,6 +82,10 @@ def receive_data(client_socket):
     :param client_socket:
     :return:
     """
+
+    chatui.print_message("Welcome!")
+    chatui.print_message("To see a list of available commands, please enter '/help'")
+
     while True:
         data = client_socket.recv(1024)
 
