@@ -64,6 +64,7 @@ def broadcast(sender_socket, list_of_clients, data):
     """
     for client in list_of_clients:
         if client != sender_socket:
+            # Checks if client is not the sender
             client.sendall(data)
 
 
@@ -94,11 +95,11 @@ def run_server(port):
                     print(f"Connection lost: {sock.getpeername()}")
                     if sock in read_set:
                         read_set.remove(sock)
-                    if sock in ready_to_read:
-                        ready_to_read.remove(sock)
+                    broadcast(server_socket, read_set, create_leave_payload(nicknames[sock]))
                     if sock in nicknames:
                         nicknames.pop(sock)
                     continue
+
                 if data:
                     payload = json.loads(data.decode("utf-8"))
                     try:
@@ -114,12 +115,10 @@ def run_server(port):
                         print(f"Connection lost: {sock.getpeername()}")
                         if sock in read_set:
                             read_set.remove(sock)
-                        if sock in ready_to_read:
-                            ready_to_read.remove(sock)
+                        broadcast(server_socket, read_set, create_leave_payload(nicknames[sock]))
                         if sock in nicknames:
                             nicknames.pop(sock)
                 elif data is None:
-                    ready_to_read.remove(sock)
                     read_set.remove(sock)
                     nicknames.pop(sock)
                     sock.close()
