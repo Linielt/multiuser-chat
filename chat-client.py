@@ -10,6 +10,7 @@ from chatui import init_windows
 def usage():
     print("usage: chat-client.py nickname host port")
 
+
 def send_hello_payload(client_socket, nickname):
     """
     Sends payload to allow server to associate the client socket with a nickname
@@ -25,6 +26,7 @@ def send_hello_payload(client_socket, nickname):
     hello_bytes = json.dumps(hello_payload).encode("utf-8")
     client_socket.sendall(hello_bytes)
 
+
 def send_chat_payload(client_socket, message):
     """
     Sends a payload representing a chat message to the server
@@ -38,6 +40,7 @@ def send_chat_payload(client_socket, message):
     }
     chat_bytes = json.dumps(chat_payload).encode("utf-8")
     client_socket.sendall(chat_bytes)
+
 
 def send_list_payload(client_socket):
     """
@@ -71,9 +74,12 @@ def send_messages(client_socket, nickname):
         elif message == "/help":
             chatui.print_message("Here is the list of available commands:")
             chatui.print_message("/q : Disconnects you from the server")
-            chatui.print_message("/list : Lists the nicknames of the currently connected users")
+            chatui.print_message(
+                "/list : Lists the nicknames of the currently connected users"
+            )
         else:
             send_chat_payload(client_socket, message)
+
 
 def receive_data(client_socket):
     """
@@ -93,15 +99,15 @@ def receive_data(client_socket):
             if data:
                 payload = json.loads(data.decode("utf-8"))
 
-                if payload['type'] == "chat":
+                if payload["type"] == "chat":
                     chatui.print_message(f"{payload['nick']}: {payload['message']}")
-                elif payload['type'] == "join":
+                elif payload["type"] == "join":
                     chatui.print_message(f"*** {payload['nick']} has joined the chat")
-                elif payload['type'] == "leave":
+                elif payload["type"] == "leave":
                     chatui.print_message(f"*** {payload['nick']} has left the chat")
-                elif payload['type'] == "list":
+                elif payload["type"] == "list":
                     chatui.print_message(f"List of connected users:")
-                    for nickname in payload['nicknames']:
+                    for nickname in payload["nicknames"]:
                         chatui.print_message(nickname)
             else:
                 print("You have disconnected")
@@ -113,6 +119,7 @@ def receive_data(client_socket):
             break
         finally:
             chatui.end_windows()
+
 
 def main(argv):
     try:
@@ -130,7 +137,13 @@ def main(argv):
     init_windows()
     send_hello_payload(client_socket, nickname)
 
-    sending_thread = threading.Thread(target=send_messages, args=(client_socket, nickname,))
+    sending_thread = threading.Thread(
+        target=send_messages,
+        args=(
+            client_socket,
+            nickname,
+        ),
+    )
     receiving_thread = threading.Thread(target=receive_data, args=(client_socket,))
 
     sending_thread.start()
@@ -140,6 +153,7 @@ def main(argv):
 
     for thread in threads:
         thread.join()
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))

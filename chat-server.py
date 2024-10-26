@@ -17,11 +17,7 @@ def create_chat_payload(nickname, message):
     :param message:
     :return:
     """
-    chat_payload = {
-        "type": "chat",
-        "nick": nickname,
-        "message": message
-    }
+    chat_payload = {"type": "chat", "nick": nickname, "message": message}
     chat_bytes = json.dumps(chat_payload).encode("utf-8")
     return chat_bytes
 
@@ -32,10 +28,7 @@ def create_join_payload(nickname):
     :param nickname:
     :return:
     """
-    join_payload = {
-        "type": "join",
-        "nick": nickname
-    }
+    join_payload = {"type": "join", "nick": nickname}
     join_bytes = json.dumps(join_payload).encode("utf-8")
     return join_bytes
 
@@ -46,22 +39,17 @@ def create_leave_payload(nickname):
     :param nickname:
     :return:
     """
-    leave_payload = {
-        "type": "leave",
-        "nick": nickname
-    }
+    leave_payload = {"type": "leave", "nick": nickname}
     leave_bytes = json.dumps(leave_payload).encode("utf-8")
     return leave_bytes
+
 
 def create_list_payload(nicknames):
     """
     Create payload containing list of nicknames of clients connected to the server
     :return:
     """
-    list_payload = {
-        "type": "list",
-        "nicknames": list(nicknames.values())
-    }
+    list_payload = {"type": "list", "nicknames": list(nicknames.values())}
     list_bytes = json.dumps(list_payload).encode("utf-8")
     return list_bytes
 
@@ -87,7 +75,7 @@ def run_server(port):
     :return:
     """
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('', port))
+    server_socket.bind(("", port))
     server_socket.listen(5)
 
     read_set = {server_socket}
@@ -107,7 +95,9 @@ def run_server(port):
                     print(f"Connection lost: {sock.getpeername()}")
                     if sock in read_set:
                         read_set.remove(sock)
-                    broadcast(server_socket, read_set, create_leave_payload(nicknames[sock]))
+                    broadcast(
+                        server_socket, read_set, create_leave_payload(nicknames[sock])
+                    )
                     if sock in nicknames:
                         nicknames.pop(sock)
                     continue
@@ -115,21 +105,27 @@ def run_server(port):
                 if data:
                     payload = json.loads(data.decode("utf-8"))
                     try:
-                        if payload['type'] == "hello":
-                            nicknames[sock] = payload['nick']
-                            join_payload = create_join_payload(payload['nick'])
+                        if payload["type"] == "hello":
+                            nicknames[sock] = payload["nick"]
+                            join_payload = create_join_payload(payload["nick"])
                             broadcast(server_socket, read_set, join_payload)
-                        elif payload['type'] == "chat":
+                        elif payload["type"] == "chat":
                             chat_nick = nicknames[sock]
-                            chat_payload = create_chat_payload(chat_nick, payload['message'])
+                            chat_payload = create_chat_payload(
+                                chat_nick, payload["message"]
+                            )
                             broadcast(server_socket, read_set, chat_payload)
-                        elif payload['type'] == "list":
+                        elif payload["type"] == "list":
                             sock.sendall(create_list_payload(nicknames))
                     except ConnectionError:
                         print(f"Connection lost: {sock.getpeername()}")
                         if sock in read_set:
                             read_set.remove(sock)
-                        broadcast(server_socket, read_set, create_leave_payload(nicknames[sock]))
+                        broadcast(
+                            server_socket,
+                            read_set,
+                            create_leave_payload(nicknames[sock]),
+                        )
                         if sock in nicknames:
                             nicknames.pop(sock)
                 elif data is None:
